@@ -5,31 +5,33 @@ import (
 	"fmt"
 )
 
-type Type interface {
+type _type interface {
 	int | int8 | int16 | int32 | int64 | uint | uint8 | uint16 | uint32 | uint64 |
 		float32 | float64 | string | bool
 }
 
-type LinkedList[T Type] struct {
-	root *Node[T]
+type LinkedList[T _type] struct {
+	root *lNode[T]
+	size int
 }
 
-type Node[T Type] struct {
-	Value T
-	next  *Node[T]
-	prev  *Node[T]
+type lNode[T _type] struct {
+	val  T
+	next *lNode[T]
+	prev *lNode[T]
 }
 
-func NewList[T Type]() *LinkedList[T] {
+func NewList[T _type]() *LinkedList[T] {
 	var l LinkedList[T]
-	l.root = &Node[T]{}
+	l.root = &lNode[T]{}
 	l.root.next = l.root
 	l.root.prev = l.root
+	l.size = 0
 	return &l
 }
 
 func (l *LinkedList[T]) Add(elem T) {
-	var node Node[T]
+	var node lNode[T]
 	var currNode = l.root
 
 	for currNode.next != l.root {
@@ -38,14 +40,15 @@ func (l *LinkedList[T]) Add(elem T) {
 	currNode.next = &node
 	node.prev = currNode
 	node.next = l.root
-	node.Value = elem
+	node.val = elem
+	l.size++
 }
 
 func (l *LinkedList[T]) String() string {
 	el := l.root.next
 	var s string
 	for el != l.root {
-		s += fmt.Sprintf("%v ", el.Value)
+		s += fmt.Sprintf("%v ", el.val)
 		el = el.next
 	}
 	if len(s) > 0 {
@@ -58,7 +61,7 @@ func (l *LinkedList[T]) IndexOf(element T) (int, error) {
 	var el = l.root.next
 	var index = 0
 	for el != l.root {
-		if el.Value == element {
+		if el.val == element {
 			return index, nil
 		}
 		index++
@@ -72,21 +75,22 @@ func (l *LinkedList[T]) At(pos int) (T, error) {
 	index := 0
 	for index < pos {
 		if el == l.root {
-			return el.Value, errors.New("Index out of range")
+			return el.val, errors.New("Index out of range")
 		}
 		el = el.next
 		index++
 	}
-	return el.Value, nil
+	return el.val, nil
 }
 
 func (l *LinkedList[T]) DeleteValue(value T) error {
 	var el = l.root.next
 
 	for el != l.root {
-		if el.Value == value {
+		if el.val == value {
 			el.prev.next = el.next
 			el.next.prev = el.prev
+			l.size--
 			return nil
 		}
 		el = el.next
@@ -109,6 +113,7 @@ func (l *LinkedList[T]) DeleteAt(pos int) error {
 
 	el.prev.next = el.next
 	el.next.prev = el.prev
+	l.size--
 	return nil
 }
 
@@ -116,10 +121,15 @@ func (l *LinkedList[T]) Filter(condition func(a T) bool) *LinkedList[T] {
 	output := NewList[T]()
 	var el = l.root.next
 	for el != l.root {
-		if condition(el.Value) {
-			output.Add(el.Value)
+		if condition(el.val) {
+			output.Add(el.val)
+			output.size++
 		}
 		el = el.next
 	}
 	return output
+}
+
+func (l *LinkedList[T]) Size() int {
+	return l.size
 }
