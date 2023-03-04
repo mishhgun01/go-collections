@@ -67,6 +67,19 @@ func (s *Set[T]) At(pos int) (T, error) {
 	return el.val, nil
 }
 
+func (s *Set[T]) IndexOf(element T) (int, error) {
+	var el = s.root.next
+	var index = 0
+	for el != s.root {
+		if el.val == element {
+			return index, nil
+		}
+		index++
+		el = el.next
+	}
+	return -1, errors.New(fmt.Sprintf("No index for element %v found", element))
+}
+
 func (s *Set[T]) DeleteValue(value T) error {
 	var el = s.root.next
 
